@@ -2,12 +2,22 @@ import React from "react";
 import TreeFilter from "./component/TreeFilter";
 
 const sampleData = {
-  id: "root",
-  name: "Parent",
+  id: "0",
+  name: "root",
   children: [
     {
       id: "1",
       name: "Child - 1",
+      children: [
+        {
+          id: "10",
+          name: "Child - 10",
+        },
+        {
+          id: "11",
+          name: "Children -11",
+        },
+      ],
     },
     {
       id: "3",
@@ -15,7 +25,7 @@ const sampleData = {
       children: [
         {
           id: "4",
-          name: "Child - 4",
+          name: "Children - 4",
           children: [
             {
               id: "5",
@@ -41,20 +51,14 @@ const sampleData = {
             },
           ],
         },
+        { id: "12", name: "Child - 12" },
       ],
     },
   ],
 };
 
 const SimpleTree = () => {
-  const [data, setData] = React.useState();
-
-  // Mount Data
-  React.useEffect(() => {
-    setData(sampleData);
-  }, []);
-
-  return <TreeFilter data={data} />;
+  return <TreeFilter data={sampleData} />;
 };
 
 export default SimpleTree;

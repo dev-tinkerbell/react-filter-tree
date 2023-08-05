@@ -1,41 +1,31 @@
 import React from "react";
 import TextField from "@material-ui/core/TextField";
 import { uniq } from "lodash";
-import MyTreeView from "./MyTreeView";
-import { filterTree, expandFilteredNodes, getIDsExpandFilter } from "../util/filterTreeUtil";
+import TreeView from "@material-ui/lab/TreeView";
+import TreeItem from "@material-ui/lab/TreeItem";
+import { withStyles } from "@material-ui/styles";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import {
+  filterTree,
+  expandFilteredNodes,
+  getIDsExpandFilter,
+} from "../util/filterTreeUtil";
 
 const TreeFilter = (props) => {
   const { data } = props;
-  const [expanded, setExpanded] = React.useState(["root"]);
+  const [expanded, setExpanded] = React.useState(["0", "1", "3"]);
   const [selected, setSelected] = React.useState([]);
-  const [subjectData, setSubjectData] = React.useState();
   const [selectedSingleItem, setSelectedSingleItem] = React.useState("");
 
-  React.useEffect(() => {
-    setSubjectData(() => data);
-  }, [data]);
-
-  const onFilterMouseUp = (e) => {
+  const onFilterKeyUp = (e) => {
     const value = e.target.value;
     const filter = value.trim();
-    let expandedTemp = expanded;
+
     if (!filter) {
-      setSubjectData(() => data);
-      setExpanded(['root']);
+      setExpanded(["root"]);
       return;
     }
-
-    let filtered = filterTree(data, filter);
-    filtered = expandFilteredNodes(filtered, filter);
-    if (filtered && filtered.children) {
-      // filtered.children.map((item) => {
-      //   expandedTemp.push(item.id);
-      // });
-      expandedTemp = [];
-      expandedTemp.push(...getIDsExpandFilter(filtered));
-    }
-    setExpanded(uniq(expandedTemp));
-    setSubjectData(filtered);
   };
 
   const handleToggle = (event, nodeIds) => {
@@ -46,23 +36,60 @@ const TreeFilter = (props) => {
 
   const handleSelect = (event, nodeIds) => {
     setSelected(nodeIds);
-    // When false (default) is a string this takes single string.
-    if (!Array.isArray(nodeIds)) {
-      setSelectedSingleItem(nodeIds);
+  };
+
+  const getSearchedId = (ids, nodes) => {
+    if (nodes.name.includes("8")) {
+      ids = [...ids, nodes.id];
     }
-    // TODO: When `multiSelect` is true this takes an array of strings
+
+    if (nodes.children && nodes.children.length > 0) {
+      // return [
+      //   ...ids,
+      //   ...nodes.children.map((node) => getSearchedId(ids, node)),
+      // ];
+
+      for (let index = 0; index < nodes.children.length; index++) {
+        ids = getSearchedId(ids, nodes.children[index]);
+      }
+    }
+
+    return ids;
+  };
+
+  console.log("data", data);
+  // debugger;
+  const ids = getSearchedId([], data);
+  console.log("ids", ids);
+
+  const renderTree = (nodes) => {
+    if (!nodes || nodes.length === 0) {
+      return null;
+    }
+
+    return (
+      <TreeItem key={nodes.id} nodeId={nodes.id} label={nodes.name}>
+        {Array.isArray(nodes.children)
+          ? nodes.children.map((node) => renderTree(node))
+          : null}
+      </TreeItem>
+    );
   };
 
   return (
     <div>
-      <TextField label="Filter ..." onKeyUp={onFilterMouseUp} />
-      <MyTreeView
-        data={subjectData}
+      <TextField label="Filter ..." onKeyUp={onFilterKeyUp} />
+
+      <TreeView
+        defaultCollapseIcon={<ExpandMoreIcon />}
+        defaultExpandIcon={<ChevronRightIcon />}
         expanded={expanded}
         selected={selected}
-        handleToggle={handleToggle}
-        handleSelect={handleSelect}
-      />
+        onNodeToggle={handleToggle}
+        onNodeSelect={handleSelect}
+      >
+        {renderTree(data)}
+      </TreeView>
     </div>
   );
 };
